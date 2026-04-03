@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NZ Fuel Security — Strait of Hormuz Disruption Model</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#080f1e;--bg2:#0d1829;--bg3:#111e33;
+  --bdr:#1e2d42;--bdr2:#2a3f5c;
+  --tx:#e2e8f0;--tx2:#94a3b8;--tx3:#475569;
+  --acc:#3b82f6;
+  --petrol:#60a5fa;--diesel:#34d399;--jet:#fbbf24;--crude:#f472b6;
+  --r0:#22c55e;--r1:#84cc16;--r2:#eab308;--r3:#f97316;--r4:#ef4444;
+  --pur:#8b5cf6;--amber:#eab308;
+  --rad:7px;--radsm:5px;
+  --font:'IBM Plex Mono','Courier New',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px;line-height:1.5}
+body{max-width:1100px;margin:0 auto;padding:28px 22px 70px}
+.eyebrow{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:7px}
+h1{font-size:17px;font-weight:500;margin-bottom:4px}
+.subtitle{font-size:11px;color:var(--tx3)}
+.subtitle span{color:var(--acc)}
+strong{font-weight:500}
+.hdr{margin-bottom:22px;border-bottom:1px solid var(--bdr);padding-bottom:18px}
+.sec{margin-bottom:18px}
+.panel{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rad);padding:15px 17px;margin-bottom:13px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.g6{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+
+.sc-row{display:flex;gap:7px;flex-wrap:wrap}
+.scb{padding:9px 13px;border-radius:var(--radsm);border:1px solid var(--bdr);background:var(--bg3);cursor:pointer;font-family:var(--font);font-size:10px;color:var(--tx2);text-align:left;outline:none;transition:all .15s}
+.scb:hover{border-color:var(--bdr2);color:var(--tx)}
+.scb.active{border-color:var(--acc);color:var(--acc);background:rgba(59,130,246,.09)}
+.scb .sn{display:block;font-weight:500;font-size:11px;margin-bottom:2px}
+.scb .sd{display:block;font-size:9px;opacity:.5}
+
+.clbl{font-size:10px;color:var(--tx2);display:block;margin-bottom:6px}
+.cv{color:var(--acc);font-weight:500}
+.cs{font-size:9px;color:var(--tx3);margin-left:5px}
+.re{display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);margin-top:3px}
+input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer}
+
+.trow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:11px}
+.tbtn{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:11px;color:var(--tx2);border:1px solid var(--bdr);border-radius:var(--radsm);padding:9px 14px;background:var(--bg3);font-family:var(--font);outline:none;transition:all .15s;user-select:none}
+.tbtn:hover{border-color:var(--bdr2);color:var(--tx)}
+.tbtn.active{border-color:var(--acc);color:var(--acc);background:rgba(59,130,246,.09)}
+.tind{width:14px;height:14px;border-radius:50%;border:1.5px solid currentColor;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tind::after{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;transform:scale(0);transition:transform .2s}
+.tbtn.active .tind::after{transform:scale(1)}
+
+.snote{font-size:10px;color:var(--tx3);line-height:1.7;padding:9px 13px;border-left:2px solid var(--bdr2);margin-top:11px}
+.snote strong{color:var(--tx2)}
+
+.rc{border:1px solid;border-radius:var(--radsm);padding:11px 13px}
+.rn{font-size:10px;font-weight:500;margin-bottom:4px}
+.rd{font-size:9px;color:var(--tx3);line-height:1.55;margin-bottom:9px}
+.rsr{display:flex;align-items:center;gap:7px}
+.rpct{font-size:12px;font-weight:500;min-width:38px}
+.rsub{font-size:9px;color:var(--tx3);margin-top:3px}
+
+.mc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--radsm);padding:11px 13px}
+.md{font-size:20px;font-weight:500;line-height:1}
+.mdt{font-size:9px;color:var(--tx3);margin-top:2px}
+.ml{font-size:10px;color:var(--tx2);margin-top:6px;line-height:1.4}
+
+.tabrow{display:flex;border-bottom:1px solid var(--bdr);margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:7px 13px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;color:var(--tx3);background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font);outline:none;transition:all .15s}
+.tab:hover{color:var(--tx2)}
+.tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.chwrap{position:relative;width:100%;height:285px;margin-bottom:14px}
+
+.alert{font-size:10px;padding:9px 13px;border-radius:var(--radsm);color:var(--tx2);margin-bottom:13px;line-height:1.65}
+.alert-red{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.22)}
+.alert-red strong{color:#ef4444}
+
+.etbl{width:100%;border-collapse:collapse;font-size:11px;min-width:540px}
+.etbl th{padding:6px 10px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);border-bottom:1px solid var(--bdr);font-weight:400;text-align:center}
+.etbl th:first-child{text-align:left}
+.etbl td{padding:8px 10px;border-bottom:1px solid rgba(30,45,66,.7);text-align:center;color:var(--tx2)}
+.etbl td:first-child{text-align:left;font-weight:500}
+
+.sc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--radsm);padding:13px 15px}
+.sh{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
+.sv{font-size:22px;font-weight:500;line-height:1.1}
+.ss{font-size:10px;color:var(--tx3);margin-top:5px;line-height:1.55}
+.sv2{font-size:13px;font-weight:500;color:var(--tx2);margin-top:5px}
+
+.inf-insight{background:rgba(234,179,8,.05);border:1px solid rgba(234,179,8,.18);border-radius:var(--radsm);padding:12px 15px;font-size:10px;color:var(--tx2);line-height:1.75;margin-bottom:13px}
+.inf-insight strong{color:#eab308}
+.ic{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--radsm);padding:11px 13px}
+.ih{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-bottom:5px}
+.iv{font-size:20px;font-weight:500;line-height:1.15}
+.is{font-size:10px;color:var(--tx3);margin-top:4px;line-height:1.5}
+
+.cleg{display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--tx3);margin-bottom:10px}
+.cleg span{display:flex;align-items:center;gap:5px}
+.cdot{width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0}
+
+.debug-bar{display:flex;gap:10px;flex-wrap:wrap;font-size:9px;color:var(--tx3);padding:8px 12px;border:1px solid var(--bdr);border-radius:var(--radsm);margin-bottom:12px;background:var(--bg3)}
+.debug-bar span{color:var(--tx2)}
+
+footer{font-size:9px;color:var(--tx3);line-height:1.85;border-top:1px solid var(--bdr);padding-top:14px;margin-top:8px}
+
+@media(max-width:720px){.g2,.g3,.g4,.g5,.g6{grid-template-columns:1fr 1fr}h1{font-size:15px}}
+@media(max-width:480px){.g2,.g3,.g4,.g5,.g6{grid-template-columns:1fr}body{padding:16px 14px 50px}.tab{padding:6px 8px;font-size:8px}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <span class="eyebrow">NZ Fuel Security — Strait of Hormuz Disruption Model</span>
+  <h1>Stock drawdown, prices, GDP &amp; inflation scenarios</h1>
+  <p class="subtitle">Day 0 = <span>3 April 2026</span> &nbsp;·&nbsp; Duration-dependent crude price engine &nbsp;·&nbsp; Physical in-country stocks only (IEA offshore obligations excluded) &nbsp;·&nbsp; NZ is a price taker</p>
+</div>
+
+<div class="sec">
+  <span class="eyebrow">Scenario preset</span>
+  <div class="sc-row" id="scBtns"></div>
+</div>
+
+<div class="panel">
+  <span class="eyebrow">Supply &amp; demand parameters</span>
+  <div class="g2" style="margin-top:10px">
+    <div>
+      <span class="clbl">Hormuz reopening — Day <span class="cv" id="rdV">90</span> <span class="cs" id="rdDate"></span></span>
+      <input type="range" min="14" max="300" value="90" id="rdSl">
+      <div class="re"><span>14 days</span><span>300 days</span></div>
+    </div>
+    <div>
+      <span class="clbl">Demand surge — <span class="cv" id="pkV">1.00</span>× <span class="cs">(panic buying / hoarding)</span></span>
+      <input type="range" min="0.9" max="1.5" step="0.05" value="1.0" id="pkSl">
+      <div class="re"><span>0.90×</span><span>1.50×</span></div>
+    </div>
+  </div>
+  <div class="snote">Baseline crude: <strong>$75/bbl Brent equiv.</strong> &nbsp;·&nbsp; Pipeline impact lag: <strong>20 days</strong> &nbsp;·&nbsp; Supply floor: <strong id="floorNote">30%</strong> &nbsp;·&nbsp; Post-reopen recovery: <strong>28d transit + refinery ramp</strong> &nbsp;·&nbsp; Crude climbs ~$0.45/bbl/day throughout closure — longer closures produce higher peaks and heavier cumulative losses</div>
+</div>
+
+<div class="panel">
+  <span class="eyebrow">Geopolitical &amp; policy factors</span>
+  <div class="trow" style="margin-top:10px">
+    <button class="tbtn" id="togRus" onclick="toggleRussian()"><span class="tind"></span>Korean refineries access Russian ESPO crude</button>
+    <button class="tbtn" id="togGov" onclick="toggleGovt()"><span class="tind"></span>Government pump price support</button>
+  </div>
+  <div class="snote" id="geoNote">Enable toggles above to model geopolitical and policy scenarios.</div>
+</div>
+
+<div class="panel">
+  <span class="eyebrow">Restriction stages — demand reduction (slide to adjust policy effectiveness)</span>
+  <div class="g3" id="rstGrid" style="margin-top:10px"></div>
+</div>
+
+<div class="sec">
+  <span class="eyebrow">Key milestones</span>
+  <div class="g6" id="milGrid" style="margin-top:8px"></div>
+</div>
+
+<div class="panel">
+  <div class="tabrow" id="tabRow"></div>
+  <div class="cleg" id="cpiLeg" style="display:none">
+    <span><span class="cdot" style="background:#eab308"></span>Total CPI (annualised)</span>
+    <span><span class="cdot" style="background:#60a5fa"></span>Fuel direct</span>
+    <span><span class="cdot" style="background:#34d399"></span>Food (6wk lag)</span>
+    <span><span class="cdot" style="background:#f97316"></span>Construction (9wk lag)</span>
+    <span><span class="cdot" style="background:#a78bfa"></span>Goods &amp; services (12wk lag)</span>
+    <span><span class="cdot" style="background:#334155"></span>Baseline 3%</span>
+    <span><span class="cdot" style="background:#475569;opacity:.6"></span>Nominal wage 3.5%</span>
+  </div>
+  <div class="chwrap"><canvas id="chart"></canvas></div>
+  <div class="alert alert-red" id="fiscalNote" style="display:none"></div>
+</div>
+
+<div id="infPanel" style="display:none">
+  <div class="inf-insight" id="infInsight"></div>
+  <div class="g4" id="infGrid" style="margin-bottom:16px"></div>
+</div>
+
+<div class="sec">
+  <span class="eyebrow">Restriction escalation — per product with calendar dates</span>
+  <div style="overflow-x:auto;margin-top:8px">
+    <table class="etbl">
+      <thead><tr>
+        <th></th>
+        <th style="color:var(--r1)">Advisory (&lt;30d cover)</th>
+        <th style="color:var(--r2)">Stage 1 (&lt;21d cover)</th>
+        <th style="color:var(--r3)">Stage 2 (&lt;14d cover)</th>
+        <th style="color:var(--r4)">Stage 3 (&lt;7d cover)</th>
+      </tr></thead>
+      <tbody id="escBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="sec">
+  <span class="eyebrow">Peak &amp; cumulative impact summary</span>
+  <div id="sumGrid" style="margin-top:8px"></div>
+</div>
+
+<footer>
+  <strong>Price baselines (Apr 2026):</strong> Petrol 95 ~$3.10/L · Diesel $3.60/L · Jet fuel wholesale ~$1.60/L ·
+  <strong>Crude model:</strong> Panic spike ~$112/bbl (Day 12) → partial retreat → sustained climb ~$0.45/bbl/day throughout closure · Asymmetric recovery at 55% rate · Structural $12/bbl floor ·
+  <strong>Sensitivity:</strong> Petrol $0.0088/L · Diesel $0.0098/L · Jet $0.0125/L per USD/bbl (yield + NZD/USD ~0.57 + crisis depreciation + GST/excise) ·
+  <strong>GDP:</strong> Diesel freight/agri 1.55× · Petrol consumer 0.88× · Jet tourism 1.15× · Restriction productivity loss by stage · <em>Cumulative GDP loss = average annualised daily drag × 365 days shown as total GDP-percentage-point-days</em> ·
+  <strong>CPI (Statistics NZ weights):</strong> Fuel 4.5% · Food 19% · Construction 15% · Goods/services 12% · Pass-through: food 9% · construction 9% · goods 5% · Lags: food 42d · construction 63d · goods 84d ·
+  <strong>Russian ESPO:</strong> Supply floor 30%→48%; crude climb moderated to $0.38/day; NZ still buys at Singapore spot · Physical stocks exclude IEA offshore entitlements (~28d paper vs ~37d physical cover)
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+
+const DAY0  = new Date('2026-04-03');
+const PRODS = ['petrol','diesel','jet'];
+const PM    = {
+  petrol:{ label:'Petrol 95', color:'#60a5fa' },
+  diesel:{ label:'Diesel',    color:'#34d399' },
+  jet:   { label:'Jet Fuel',  color:'#fbbf24' }
+};
+const BASE_C  = { petrol:10.0, diesel:15.0, jet:3.5  };
+const START_S = { petrol:450,  diesel:550,  jet:130  };
+const BASE_P  = { petrol:3.10, diesel:3.60, jet:1.60 };
+const SENS    = { petrol:.0088, diesel:.0098, jet:.0125 };
+const SUPCAP  = { petrol:3.50,  diesel:4.00, jet:2.20  };
+
+// Statistics NZ CPI basket weights
+const CPI_W   = { fuel:.045, food:.190, con:.150, goods:.120 };
+// Pass-through: fraction of diesel change that flows into each category
+// Revised upward slightly (NZ is freight-dependent, island nation)
+const CPI_PT  = { food:.09, con:.09, goods:.05 };
+// Propagation lags (days)
+const CPI_LAG = { food:42, con:63, goods:84 };
+const BASELINE_CPI = 3.0;
+const WAGE_GROWTH  = 3.5;
+
+const TIERS = [
+  { id:0, label:'Normal',   color:'#22c55e', dth:Infinity },
+  { id:1, label:'Advisory', color:'#84cc16', dth:30 },
+  { id:2, label:'Stage 1',  color:'#eab308', dth:21 },
+  { id:3, label:'Stage 2',  color:'#f97316', dth:14 },
+  { id:4, label:'Stage 3',  color:'#ef4444', dth:7  },
+];
+// GDP restriction drag by tier — annualised % of GDP
+const RST_GDP = [0, 0.3, 1.2, 2.8, 6.0];
+
+const RST = [
+  { id:2, name:'Stage 1 — Allocation', color:'#eab308', bc:'rgba(234,179,8,.07)',  defDr:15,
+    detail:'Priority allocation to freight, agriculture, health &amp; utilities. Non-essential commercial restricted. Retailer purchase limits. Public conservation advisory.' },
+  { id:3, name:'Stage 2 — Rationing',  color:'#f97316', bc:'rgba(249,115,22,.07)', defDr:30,
+    detail:'Odd/even plate rationing. 20L max per fill. Essential services certification. Tourism &amp; leisure severely curtailed. Airlines cut domestic schedules.' },
+  { id:4, name:'Stage 3 — Emergency',  color:'#ef4444', bc:'rgba(239,68,68,.07)',  defDr:50,
+    detail:'Government-controlled distribution only. Private vehicles banned except exemptions. Most domestic air suspended. Civil emergency powers invoked.' },
+];
+
+const SCENARIOS = [
+  { name:'Quick Resolution', days:45,  desc:'Diplomatic intervention — 45 days' },
+  { name:'Extended',         days:90,  desc:'Protracted conflict — 90 days'     },
+  { name:'Prolonged',        days:150, desc:'Structural disruption — 150 days'  },
+  { name:'Catastrophic',     days:240, desc:'Multi-year crisis — 240 days'      },
+];
+
+const TABS = [
+  { id:'crude', label:'Crude price' },
+  { id:'price', label:'Pump prices' },
+  { id:'cover', label:'Days cover'  },
+  { id:'gdp',   label:'GDP impact'  },
+  { id:'inf',   label:'Inflation'   },
+];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+
+let scIdx=1, activeTab='price', myChart=null;
+let p = { reopen:90, panic:1.0, russian:false, govt:false, dr:{2:15,3:30,4:50} };
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+
+function fmtD(n,s){
+  const d=new Date(DAY0); d.setDate(d.getDate()+n);
+  if(s==='s') return d.toLocaleDateString('en-NZ',{day:'numeric',month:'short'});
+  return d.toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});
+}
+function getTier(ds){ for(let i=4;i>=1;i--) if(ds<=TIERS[i].dth) return TIERS[i]; return TIERS[0]; }
+
+// ═══════════════════════════════════════════════════════
+// CRUDE PRICE — duration-dependent continuous model
+//
+// The crude price keeps climbing at ~$0.45/bbl/day throughout the
+// entire closure period. This means:
+//   45d  → peak ~$113/bbl
+//   90d  → peak ~$133/bbl
+//   150d → peak ~$160/bbl
+//   240d → peak ~$200/bbl (hard cap ~2.8× baseline)
+//
+// Recovery is ASYMMETRIC — prices fall at 55% the rate they rose,
+// with a $12/bbl structural floor persisting permanently.
+// ═══════════════════════════════════════════════════════
+
+function getCrude(day, reopen, russian){
+  const B         = 75;
+  const climbRate = russian ? 0.38 : 0.45;
+  const CAP       = B * (russian ? 2.5 : 2.8);
+
+  if(day === 0) return B;
+  if(day <= 3)  return B + 28*(day/3);
+  if(day <= 12) return B + 28 + 9*((day-3)/9);
+  if(day <= 20) return B + 37 - 11*((day-12)/8);
+
+  if(day <= reopen){
+    return Math.min(101 + climbRate*(day-20), CAP);
+  }
+
+  // Asymmetric recovery
+  const peakAtReopen  = Math.min(101 + climbRate*(reopen-20), CAP);
+  const floor         = B + 12;
+  const decayDays     = (peakAtReopen - floor) / (climbRate * 0.55);
+  const rf            = Math.min(1, (day-reopen) / decayDays);
+  return peakAtReopen - (peakAtReopen - floor)*rf;
+}
+
+// ═══════════════════════════════════════════════════════
+// SUPPLY FRACTION
+// ═══════════════════════════════════════════════════════
+
+function getSF(day, reopen, russian){
+  const FLOOR = russian ? 0.48 : 0.30;
+  if(day < 20)    return 1.0;
+  if(day < 34)    return 1 - (1-FLOOR)*((day-20)/14);
+  const rs = reopen+14;
+  if(day < rs)    return FLOOR;
+  if(day < rs+28) return FLOOR + (1-FLOOR)*((day-rs)/28);
+  return 1.0;
+}
+
+function getPx(crude, pr){
+  return Math.max(BASE_P[pr], BASE_P[pr] + (crude-75)*SENS[pr]);
+}
+
+// ═══════════════════════════════════════════════════════
+// GDP — two channels:
+//   1. PRICE: cost pass-through per product × sectoral multiplier
+//   2. RESTRICTION: productivity loss from physical unavailability
+//
+// NOTE on peak vs cumulative:
+//   The instantaneous peak is dominated by restriction tiers (Stage 3
+//   = −6.0% restriction alone). Since Stage 3 hits at ~the same day
+//   for all sufficiently long scenarios (crude price at that point
+//   is identical), the instantaneous PEAK looks the same.
+//
+//   CUMULATIVE loss properly differentiates scenarios — a 240-day
+//   closure imposes far more total economic damage than a 90-day
+//   closure even if the worst single day looks similar.
+// ═══════════════════════════════════════════════════════
+
+function getGDPchannels(row){
+  const dd = Math.max(0, row.diesel.mktPx - BASE_P.diesel);
+  const pd = Math.max(0, row.petrol.mktPx - BASE_P.petrol);
+  const jd = Math.max(0, row.jet.mktPx    - BASE_P.jet);
+  const price = -(dd*1.55 + pd*0.88 + jd*1.15);
+  const restr = -(RST_GDP[row.maxTid] || 0);
+  return { price, restr, total: price+restr };
+}
+
+// ═══════════════════════════════════════════════════════
+// CPI — four-layer propagation with lags
+// ═══════════════════════════════════════════════════════
+
+function calcCPI(day, carr){
+  const fb   = getPx(carr[day],'petrol')*.55 + getPx(carr[day],'diesel')*.45;
+  const bb   = BASE_P.petrol*.55 + BASE_P.diesel*.45;
+  const fuel = ((fb-bb)/bb) * CPI_W.fuel * 100;
+
+  const df   = Math.max(0, day-CPI_LAG.food);
+  const food = ((getPx(carr[df],'diesel')-BASE_P.diesel)/BASE_P.diesel) * CPI_PT.food * CPI_W.food * 100;
+
+  const dc   = Math.max(0, day-CPI_LAG.con);
+  const con  = ((getPx(carr[dc],'diesel')-BASE_P.diesel)/BASE_P.diesel) * CPI_PT.con  * CPI_W.con  * 100;
+
+  const dg   = Math.max(0, day-CPI_LAG.goods);
+  const goods= ((getPx(carr[dg],'diesel')-BASE_P.diesel)/BASE_P.diesel) * CPI_PT.goods* CPI_W.goods* 100;
+
+  const shock = fuel+food+con+goods;
+  return {
+    total: BASELINE_CPI + shock,
+    fuel, food, con, goods, shock,
+    real:  WAGE_GROWTH - (BASELINE_CPI+shock),
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// SIMULATION
+// ═══════════════════════════════════════════════════════
+
+function simulate(){
+  const carr = [];
+  for(let d=0; d<=365; d++) carr.push(getCrude(d, p.reopen, p.russian));
+
+  const stocks={...START_S}, rows=[], evts={};
+
+  for(let day=0; day<=365; day++){
+    const crude = carr[day];
+    const sf    = getSF(day, p.reopen, p.russian);
+    const row   = { day, crude, sf: Math.round(sf*100) };
+    let maxTid  = 0;
+
+    for(const pr of PRODS){
+      const bc    = BASE_C[pr]*p.panic;
+      const ds    = stocks[pr]/bc;
+      const tier  = getTier(ds);
+      const dr    = (tier.id>=2 ? p.dr[tier.id] : tier.id===1 ? 5 : 0)/100;
+      stocks[pr]  = Math.max(0, stocks[pr] + BASE_C[pr]*sf - bc*(1-dr));
+
+      const mktPx    = getPx(crude, pr);
+      const cappedPx = p.govt ? Math.min(mktPx, SUPCAP[pr]) : mktPx;
+      const fiscal   = p.govt ? Math.max(0, mktPx-SUPCAP[pr])*BASE_C[pr]*1000 : 0;
+
+      row[pr] = { stock:Math.round(stocks[pr]), days:ds, mktPx, px:cappedPx, fiscal, tid:tier.id };
+      if(tier.id > maxTid) maxTid = tier.id;
+      if(!evts[`${pr}_t${tier.id}`]) evts[`${pr}_t${tier.id}`]=day;
+    }
+
+    row.maxTid = maxTid;
+    row.totalFiscal = PRODS.reduce((a,pr)=>a+row[pr].fiscal,0);
+
+    const gdpC   = getGDPchannels(row);
+    row.gdp      = gdpC.total;
+    row.gdpP     = gdpC.price;
+    row.gdpR     = gdpC.restr;
+    row.cpi      = calcCPI(day, carr);
+    rows.push(row);
+  }
+
+  return { rows, evts };
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART
+// ═══════════════════════════════════════════════════════
+
+const GC = 'rgba(30,45,66,.9)';
+const TF = { family:"'IBM Plex Mono','Courier New',monospace", size:9 };
+const TO = { color:'#475569', font:TF };
+
+function buildChart(rows, tab){
+  const ctx = document.getElementById('chart').getContext('2d');
+  if(myChart){ myChart.destroy(); myChart=null; }
+
+  const thin   = rows.filter((_,i)=>i%3===0);
+  const labels = thin.map(r=>fmtD(r.day,'s'));
+  let ds, yO;
+
+  if(tab==='crude'){
+    ds = [
+      { label:'Brent equiv. (USD/bbl)', data:thin.map(r=>r.crude),
+        borderColor:'#f472b6', backgroundColor:'rgba(244,114,182,.06)', fill:true, borderWidth:2, pointRadius:0, tension:.35 },
+      { label:'Baseline $75/bbl', data:thin.map(()=>75),
+        borderColor:'#475569', borderWidth:.9, borderDash:[5,5], pointRadius:0, fill:false, tension:0 },
+    ];
+    yO={ min:60, ticks:{...TO,callback:v=>'$'+Math.round(v)}, grid:{color:GC} };
+
+  }else if(tab==='price'){
+    ds=PRODS.map(pr=>({
+      label:PM[pr].label, data:thin.map(r=>r[pr].px),
+      borderColor:PM[pr].color, backgroundColor:'transparent', borderWidth:1.8, pointRadius:0, tension:.35
+    }));
+    if(p.govt) PRODS.forEach(pr=>ds.push({
+      label:PM[pr].label+' (market)', data:thin.map(r=>r[pr].mktPx),
+      borderColor:PM[pr].color, backgroundColor:'transparent', borderWidth:.9, borderDash:[5,4], pointRadius:0, tension:.35
+    }));
+    yO={ min:2.5, ticks:{...TO,callback:v=>'$'+v.toFixed(2)}, grid:{color:GC} };
+
+  }else if(tab==='cover'){
+    ds=PRODS.map(pr=>({
+      label:PM[pr].label, data:thin.map(r=>r[pr].days),
+      borderColor:PM[pr].color, backgroundColor:'transparent', borderWidth:1.8, pointRadius:0, tension:.35
+    }));
+    [{y:30,c:'#84cc16',l:'Advisory'},{y:21,c:'#eab308',l:'Stage 1'},
+     {y:14,c:'#f97316',l:'Stage 2'},{y:7, c:'#ef4444',l:'Stage 3'}]
+    .forEach(({y,c,l})=>ds.push({
+      label:l, data:thin.map(()=>y), borderColor:c, borderWidth:.7,
+      borderDash:[4,6], pointRadius:0, fill:false, tension:0
+    }));
+    yO={ min:0, ticks:{...TO,callback:v=>v+'d'}, grid:{color:GC} };
+
+  }else if(tab==='gdp'){
+    ds=[
+      { label:'Total GDP drag (price + restriction)', data:thin.map(r=>r.gdp),
+        borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.07)', fill:true, borderWidth:2, pointRadius:0, tension:.35 },
+      { label:'Price channel only', data:thin.map(r=>r.gdpP),
+        borderColor:'#f97316', backgroundColor:'transparent', borderWidth:1.3, borderDash:[5,4], pointRadius:0, tension:.35 },
+      { label:'Restriction channel', data:thin.map(r=>r.gdpR),
+        borderColor:'#8b5cf6', backgroundColor:'transparent', borderWidth:1.1, borderDash:[3,6], pointRadius:0, tension:.35 },
+    ];
+    // No hardcoded max — let Chart.js auto-scale so all data is visible
+    yO={ ticks:{...TO,callback:v=>v.toFixed(1)+'%'}, grid:{color:GC} };
+
+  }else{
+    // Inflation
+    ds=[
+      { label:'Total CPI (annualised)', data:thin.map(r=>r.cpi.total),
+        borderColor:'#eab308', backgroundColor:'rgba(234,179,8,.07)', fill:true, borderWidth:2.2, pointRadius:0, tension:.35 },
+      { label:'Fuel direct',    data:thin.map(r=>BASELINE_CPI+r.cpi.fuel),
+        borderColor:'#60a5fa', backgroundColor:'transparent', borderWidth:1.1, borderDash:[5,4], pointRadius:0, tension:.35 },
+      { label:'Food propagation',data:thin.map(r=>BASELINE_CPI+r.cpi.food),
+        borderColor:'#34d399', backgroundColor:'transparent', borderWidth:1.1, borderDash:[5,4], pointRadius:0, tension:.35 },
+      { label:'Construction',    data:thin.map(r=>BASELINE_CPI+r.cpi.con),
+        borderColor:'#f97316', backgroundColor:'transparent', borderWidth:1.1, borderDash:[5,4], pointRadius:0, tension:.35 },
+      { label:'Goods/services',  data:thin.map(r=>BASELINE_CPI+r.cpi.goods),
+        borderColor:'#a78bfa', backgroundColor:'transparent', borderWidth:1.1, borderDash:[5,4], pointRadius:0, tension:.35 },
+      { label:'Baseline 3%', data:thin.map(()=>BASELINE_CPI),
+        borderColor:'#334155', borderWidth:.8, borderDash:[4,8], pointRadius:0, fill:false, tension:0 },
+      { label:'Nominal wage 3.5%', data:thin.map(()=>WAGE_GROWTH),
+        borderColor:'#4b5563', borderWidth:.6, borderDash:[2,6], pointRadius:0, fill:false, tension:0 },
+    ];
+    yO={ min:0, ticks:{...TO,callback:v=>v.toFixed(1)+'%'}, grid:{color:GC} };
+  }
+
+  const ttF = { family:"'IBM Plex Mono','Courier New',monospace", size:11 };
+  myChart = new Chart(ctx, {
+    type:'line', data:{labels, datasets:ds},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:180},
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{
+          display:tab!=='inf',
+          labels:{ color:'#94a3b8', font:{...TF,size:10}, boxWidth:12, usePointStyle:true,
+            filter:i=>tab==='cover'?i.datasetIndex<3:true }
+        },
+        tooltip:{
+          backgroundColor:'#08101f', borderColor:'#1e2d42', borderWidth:1,
+          titleColor:'#94a3b8', bodyColor:'#e2e8f0', titleFont:ttF, bodyFont:ttF,
+          callbacks:{
+            title:items=>items[0].label,
+            label:item=>{
+              if(tab==='cover'&&item.datasetIndex>=3) return null;
+              if(tab==='inf'&&item.datasetIndex===6)  return null;
+              const v=item.raw;
+              if(tab==='crude') return ` ${item.dataset.label}: $${v.toFixed(1)}/bbl`;
+              if(tab==='price') return ` ${item.dataset.label}: $${v.toFixed(2)}/L`;
+              if(tab==='cover') return ` ${item.dataset.label}: ${v.toFixed(1)}d`;
+              if(tab==='gdp')   return ` ${item.dataset.label}: ${v.toFixed(2)}%`;
+              if(tab==='inf'){
+                if(item.datasetIndex===0) return ` Total CPI: ${v.toFixed(2)}%`;
+                if(item.datasetIndex===5) return ` Baseline: ${v.toFixed(1)}%`;
+                return ` ${item.dataset.label}: +${(v-BASELINE_CPI).toFixed(2)}pp`;
+              }
+              return null;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ ticks:{...TO,maxTicksLimit:10,maxRotation:0}, grid:{color:GC} },
+        y:{ ...yO }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+
+function render(){
+  const { rows, evts } = simulate();
+  buildChart(rows, activeTab);
+
+  // ── Milestones
+  const ns1=Math.min(...PRODS.map(pr=>evts[`${pr}_t2`]??Infinity));
+  const ns2=Math.min(...PRODS.map(pr=>evts[`${pr}_t3`]??Infinity));
+  const ns3=Math.min(...PRODS.map(pr=>evts[`${pr}_t4`]??Infinity));
+  document.getElementById('milGrid').innerHTML=[
+    { n:0,                        c:'#94a3b8', lb:'Day 0 — disruption begins'      },
+    { n:20,                       c:'#ef4444', lb:'Supply pipeline starts falling'  },
+    { n:isFinite(ns1)?ns1:null,   c:'#eab308', lb:'Stage 1 restrictions triggered' },
+    { n:isFinite(ns2)?ns2:null,   c:'#f97316', lb:'Stage 2 rationing triggered'    },
+    { n:isFinite(ns3)?ns3:null,   c:'#ef4444', lb:'Stage 3 emergency declared'     },
+    { n:p.reopen,                 c:'#8b5cf6', lb:'Hormuz reopens'                 },
+  ].map(m=>`<div class="mc">
+    <div class="md" style="color:${m.c}">${m.n!=null?'Day '+m.n:'—'}</div>
+    <div class="mdt">${m.n!=null?fmtD(m.n):''}</div>
+    <div class="ml">${m.lb}</div>
+  </div>`).join('');
+
+  document.getElementById('floorNote').textContent = p.russian?'~48% (Russian ESPO)':'30%';
+  document.getElementById('rdDate').textContent    = '('+fmtD(p.reopen)+')';
+
+  // ── Escalation table
+  document.getElementById('escBody').innerHTML=PRODS.map(pr=>`
+    <tr>
+      <td style="color:${PM[pr].color}">${PM[pr].label}</td>
+      ${[1,2,3,4].map(t=>{
+        const d=evts[`${pr}_t${t}`];
+        const c=TIERS[t].color;
+        return `<td style="color:${d!=null?c:'#334155'}">${d!=null?`Day ${d}<br><span style="font-size:9px;opacity:.65">${fmtD(d,'s')}</span>`:'—'}</td>`;
+      }).join('')}
+    </tr>`).join('');
+
+  // ── ROBUST PEAK FINDING via reduce (no floating-point equality issues)
+  let peakCPIRow   = rows[0];
+  let peakGDPRow   = rows[0];  // most negative total GDP
+  let peakPriceRow = rows[0];  // most negative price-channel-only GDP
+  let cumGDPLoss   = 0;        // sum of abs(total GDP drag) × (1/365) = annualised avg
+  let fiscalPeak   = 0;
+  let fiscalPeakDay= 0;
+
+  for(const r of rows){
+    if(r.cpi.total  > peakCPIRow.cpi.total)     peakCPIRow   = r;
+    if(r.gdp        < peakGDPRow.gdp)            peakGDPRow   = r;
+    if(r.gdpP       < peakPriceRow.gdpP)         peakPriceRow = r;
+    cumGDPLoss += Math.abs(r.gdp) / 365;
+    if(r.totalFiscal > fiscalPeak){ fiscalPeak=r.totalFiscal; fiscalPeakDay=r.day; }
+  }
+
+  const peakCPI    = peakCPIRow.cpi.total;
+  const peakCPIDay = peakCPIRow.day;
+  const peakGDP    = peakGDPRow.gdp;
+  const peakPriceGDP = peakPriceRow.gdpP;
+
+  const pkCrude  = rows.reduce((a,r)=>r.crude>rows[a].crude?r.day:a, 0);
+  const pkDiesel = rows.reduce((a,r)=>r.diesel.mktPx>rows[a].diesel.mktPx?r.day:a, 0);
+  const pkPetrol = rows.reduce((a,r)=>r.petrol.mktPx>rows[a].petrol.mktPx?r.day:a, 0);
+  const pkJet    = rows.reduce((a,r)=>r.jet.mktPx>rows[a].jet.mktPx?r.day:a, 0);
+
+  const maxCrude  = rows[pkCrude].crude;
+  const maxDiesel = rows[pkDiesel].diesel.mktPx;
+  const maxPetrol = rows[pkPetrol].petrol.mktPx;
+  const maxJet    = rows[pkJet].jet.mktPx;
+
+  // ── Summary grid — 5 columns, 2 rows
+  document.getElementById('sumGrid').innerHTML=`
+  <div class="g5">
+    <div class="sc">
+      <div class="sh">Peak crude</div>
+      <div class="sv" style="color:#f472b6">$${maxCrude.toFixed(0)}<span style="font-size:12px;color:#475569">/bbl</span></div>
+      <div class="ss">Day ${pkCrude} · ${fmtD(pkCrude,'s')}<br>Baseline: $75/bbl · +${((maxCrude-75)/75*100).toFixed(0)}%</div>
+    </div>
+    <div class="sc">
+      <div class="sh">Peak diesel</div>
+      <div class="sv" style="color:#34d399">$${maxDiesel.toFixed(2)}<span style="font-size:12px;color:#475569">/L</span></div>
+      <div class="ss">+$${(maxDiesel-BASE_P.diesel).toFixed(2)} above $3.60<br>Peak petrol: $${maxPetrol.toFixed(2)}/L · jet: $${maxJet.toFixed(2)}/L</div>
+    </div>
+    <div class="sc">
+      <div class="sh">Peak price-channel GDP drag</div>
+      <div class="sv" style="color:#f97316">${peakPriceGDP.toFixed(2)}<span style="font-size:12px;color:#475569">%</span></div>
+      <div class="ss">Price-driven only at Day ${peakPriceRow.day}<br>Excludes restriction productivity loss</div>
+    </div>
+    <div class="sc">
+      <div class="sh">Cumulative GDP loss</div>
+      <div class="sv" style="color:#ef4444">${cumGDPLoss.toFixed(2)}<span style="font-size:12px;color:#475569">%</span></div>
+      <div class="ss">Annualised avg drag over 365 days<br>Captures duration — longer = worse</div>
+    </div>
+    <div class="sc">
+      <div class="sh">${p.govt?'Fiscal support':'Peak total GDP drag'}</div>
+      <div class="sv" style="color:${p.govt?'#ef4444':'#8b5cf6'}">${p.govt?'$'+fiscalPeak.toFixed(0)+'M':peakGDP.toFixed(1)+'%'}</div>
+      <div class="ss">${p.govt
+        ?`NZD/day at Day ${fiscalPeakDay}<br>Crown bears cost; NZ still a price taker`
+        :`Day ${peakGDPRow.day} incl. restriction loss<br>Stage ${peakGDPRow.maxTid} active at peak`
+      }</div>
+    </div>
+  </div>
+  <div class="g4" style="margin-top:10px">
+    <div class="sc">
+      <div class="sh">Peak CPI (annualised)</div>
+      <div class="sv" style="color:#eab308">${peakCPI.toFixed(2)}<span style="font-size:12px;color:#475569">%</span></div>
+      <div class="ss">Day ${peakCPIDay} · ${fmtD(peakCPIDay,'s')}<br>Baseline: ${BASELINE_CPI}% · Shock: +${(peakCPI-BASELINE_CPI).toFixed(2)}pp</div>
+    </div>
+    <div class="sc">
+      <div class="sh">Real wage at CPI peak</div>
+      <div class="sv" style="color:${(WAGE_GROWTH-peakCPI)<0?'#ef4444':'#34d399'}">${(WAGE_GROWTH-peakCPI).toFixed(2)}<span style="font-size:12px;color:#475569">%</span></div>
+      <div class="ss">Nominal wages: ${WAGE_GROWTH}%<br>${(WAGE_GROWTH-peakCPI)<0?'Real purchasing power falling':'Real wages positive'}</div>
+    </div>
+    <div class="sc">
+      <div class="sh">CPI lag after crude peak</div>
+      <div class="sv" style="color:#f97316">${Math.max(0,peakCPIDay-pkCrude)}<span style="font-size:12px;color:#475569">d</span></div>
+      <div class="ss">CPI peaks after crude — lagged propagation through food, construction, goods</div>
+    </div>
+    <div class="sc">
+      <div class="sh">${p.russian?'Russian ESPO effect':'Days CPI above baseline'}</div>
+      <div class="sv" style="color:#a78bfa">${p.russian?'−$'+(((maxCrude-(101+(0.45*(p.reopen-20)))))*1).toFixed(0)+'M saved':rows.filter(r=>r.cpi.total>BASELINE_CPI+0.5).length+'d'}</div>
+      <div class="ss">${p.russian?'Crude moderation vs no-ESPO scenario<br>NZ pump price benefit ≈ nil (Singapore spot)':'Days CPI more than 0.5pp above baseline'}</div>
+    </div>
+  </div>`;
+
+  // ── Fiscal alert
+  const fn=document.getElementById('fiscalNote');
+  if(p.govt&&fiscalPeak>0){
+    fn.style.display='block';
+    fn.innerHTML=`<strong>Fiscal cost of price support:</strong> Peak $${fiscalPeak.toFixed(0)}M NZD/day at Day ${fiscalPeakDay} (${fmtD(fiscalPeakDay,'s')}). Does not affect import costs, supply volumes, restriction triggers, or CPI propagation — those proceed on market fundamentals. Price support suppresses demand-reduction signals, potentially accelerating physical stock drawdown. NZ remains a price taker; the subsidy transfers cost to the Crown without resolving structural supply vulnerability.`;
+  }else{ fn.style.display='none'; }
+
+  // ── Geo note
+  const parts=[];
+  if(p.russian) parts.push('<strong>Russian ESPO crude active:</strong> Korean refineries increase Russian crude intake to ~40–45% capacity. Supply floor rises 30%→48%. Crude climb moderates to ~$0.38/bbl/day. NZ still buys at Singapore spot — ESPO discount retained by Korean refiners. Geopolitical exposure: US secondary sanctions risk for Korean refiners; NZ Five Eyes political exposure from sanctioned supply chain dependency.');
+  if(p.govt)    parts.push('<strong>Government price support active:</strong> Caps petrol $3.50 · diesel $4.00 · jet $2.20. Fiscal cost shown in summary. Does not alter supply volumes, restriction triggers, or CPI propagation. May suppress demand signals that would otherwise slow stock drawdown.');
+  if(!parts.length) parts.push('Enable toggles above to model geopolitical and policy scenarios.');
+  document.getElementById('geoNote').innerHTML=parts.join('<br><br>');
+
+  // ── Inflation panel
+  const infP=document.getElementById('infPanel');
+  const cpiL=document.getElementById('cpiLeg');
+  if(activeTab==='inf'){
+    infP.style.display='block'; cpiL.style.display='flex';
+    const cpiLag   =Math.max(0,peakCPIDay-pkCrude);
+    const dA5      =rows.filter(r=>r.cpi.total>5.0).length;
+    const dA5post  =rows.filter(r=>r.day>p.reopen&&r.cpi.total>5.0).length;
+    const minRW    =peakCPIRow.cpi.real;
+
+    document.getElementById('infInsight').innerHTML=
+      `<strong>Asymmetric lag:</strong> Crude price peaks at Day ${pkCrude} (${fmtD(pkCrude,'s')}), but CPI does not peak until Day ${peakCPIDay} — <strong>${cpiLag} days later</strong>. Food, construction and goods inflation propagates through supply chains with 6–12 week lags, and prices do not fall symmetrically when crude recovers. CPI can still be accelerating after Hormuz reopens, compressing the political window for response. <strong>CPI exceeds 5% for ${dA5} days — ${dA5post} of those after Hormuz reopens.</strong> A government can subsidise pump prices but cannot prevent second-order cost increases flowing through food, construction and services — this is the channel through which the price-taker thesis becomes most politically visible.`;
+
+    document.getElementById('infGrid').innerHTML=`
+      <div class="ic"><div class="ih">Peak CPI</div><div class="iv" style="color:#eab308">${peakCPI.toFixed(2)}<span style="font-size:12px;color:#475569">%</span></div><div class="is">Day ${peakCPIDay} · ${fmtD(peakCPIDay,'s')}<br>Baseline ${BASELINE_CPI}% · Shock +${(peakCPI-BASELINE_CPI).toFixed(2)}pp</div></div>
+      <div class="ic"><div class="ih">CPI lag after crude peak</div><div class="iv" style="color:#f97316">${cpiLag}<span style="font-size:12px;color:#475569">d</span></div><div class="is">Propagated inflation still<br>rising after Hormuz reopens</div></div>
+      <div class="ic"><div class="ih">Real wage at CPI peak</div><div class="iv" style="color:${minRW<0?'#ef4444':'#34d399'}">${minRW.toFixed(2)}<span style="font-size:12px;color:#475569">%</span></div><div class="is">Nominal wage growth: ${WAGE_GROWTH}%<br>${minRW<0?'Real purchasing power falling':'Positive but compressed'}</div></div>
+      <div class="ic"><div class="ih">Days CPI above 5%</div><div class="iv" style="color:#a78bfa">${dA5}<span style="font-size:12px;color:#475569">d</span></div><div class="is">Total days &gt;5% annualised<br>incl. ${dA5post}d after Hormuz reopens</div></div>`;
+  }else{
+    infP.style.display='none'; cpiL.style.display='none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// BUILD UI
+// ═══════════════════════════════════════════════════════
+
+document.getElementById('scBtns').innerHTML=SCENARIOS.map((sc,i)=>`
+  <button class="scb${i===scIdx?' active':''}" onclick="setSc(${i})">
+    <span class="sn">${sc.name}</span><span class="sd">${sc.desc}</span>
+  </button>`).join('');
+
+document.getElementById('rstGrid').innerHTML=RST.map(r=>`
+  <div class="rc" style="border-color:${r.color}55;background:${r.bc}">
+    <div class="rn" style="color:${r.color}">${r.name}</div>
+    <div class="rd">${r.detail}</div>
+    <div class="rsr">
+      <input type="range" min="5" max="70" step="5" value="${r.defDr}"
+        oninput="setDr(${r.id},+this.value,document.getElementById('drv${r.id}'))">
+      <span class="rpct" style="color:${r.color}" id="drv${r.id}">${r.defDr}%</span>
+    </div>
+    <div class="rsub">demand reduction target</div>
+  </div>`).join('');
+
+document.getElementById('tabRow').innerHTML=TABS.map(t=>`
+  <button class="tab${t.id===activeTab?' active':''}" onclick="setTab('${t.id}')">${t.label}</button>`).join('');
+
+// ── Event handlers
+window.setSc=i=>{
+  scIdx=i; p.reopen=SCENARIOS[i].days;
+  document.getElementById('rdSl').value=p.reopen;
+  document.getElementById('rdV').textContent=p.reopen;
+  document.querySelectorAll('.scb').forEach((b,j)=>b.classList.toggle('active',j===i));
+  render();
+};
+window.setTab=id=>{
+  activeTab=id;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(`'${id}'`)));
+  render();
+};
+window.setDr=(id,v,el)=>{ p.dr[id]=v; el.textContent=v+'%'; render(); };
+window.toggleRussian=()=>{ p.russian=!p.russian; document.getElementById('togRus').classList.toggle('active',p.russian); render(); };
+window.toggleGovt   =()=>{ p.govt=!p.govt;       document.getElementById('togGov').classList.toggle('active',p.govt);    render(); };
+
+document.getElementById('rdSl').oninput=e=>{
+  p.reopen=+e.target.value;
+  document.getElementById('rdV').textContent=p.reopen;
+  scIdx=null;
+  document.querySelectorAll('.scb').forEach(b=>b.classList.remove('active'));
+  render();
+};
+document.getElementById('pkSl').oninput=e=>{
+  p.panic=+e.target.value;
+  document.getElementById('pkV').textContent=p.panic.toFixed(2);
+  render();
+};
+
+render();
+</script>
+</body>
+</html>
